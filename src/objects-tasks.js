@@ -79,8 +79,12 @@ function removeProperties(obj, keys) {
  *    compareObjects({a: 1, b: 2}, {a: 1, b: 2}) => true
  *    compareObjects({a: 1, b: 2}, {a: 1, b: 3}) => false
  */
-function compareObjects(/* obj1, obj2 */) {
-  throw new Error('Not implemented');
+function compareObjects(obj1, obj2) {
+  let result;
+  if (Object.keys(obj1).length === Object.keys(obj2).length) {
+    result = Object.keys(obj1).every((key) => obj1[key] === obj2[key]);
+  }
+  return result;
 }
 
 /**
@@ -293,8 +297,16 @@ function sortCitiesArray(arr) {
  *    "Poland" => ["Lodz"]
  *   }
  */
-function group(/* array, keySelector, valueSelector */) {
-  throw new Error('Not implemented');
+function group(array, keySelector, valueSelector) {
+  const map = new Map();
+  array.forEach((item) => {
+    if (map.has(keySelector(item))) {
+      map.get(`${keySelector(item)}`).push(valueSelector(item));
+    } else {
+      map.set(keySelector(item), [valueSelector(item)]);
+    }
+  });
+  return map;
 }
 
 /**
