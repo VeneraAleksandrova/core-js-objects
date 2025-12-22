@@ -17,8 +17,10 @@
  *    shallowCopy({a: 2, b: { a: [1, 2, 3]}}) => {a: 2, b: { a: [1, 2, 3]}}
  *    shallowCopy({}) => {}
  */
-function shallowCopy(/* obj */) {
-  throw new Error('Not implemented');
+function shallowCopy(obj) {
+  const target = {};
+
+  return Object.assign(target, obj);
 }
 
 /**
@@ -118,8 +120,8 @@ function isEmptyObject(obj) {
  *    immutableObj.newProp = 'new';
  *    console.log(immutableObj) => {a: 1, b: 2}
  */
-function makeImmutable(/* obj */) {
-  throw new Error('Not implemented');
+function makeImmutable(obj) {
+  return Object.freeze(obj);
 }
 
 /**
@@ -235,8 +237,13 @@ function getJSON(obj) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const instance = Object.create(proto);
+  const parse = JSON.parse(json);
+
+  Object.assign(instance, parse);
+
+  return instance;
 }
 
 /**
@@ -390,34 +397,110 @@ function group(array, keySelector, valueSelector) {
  *
  *  For more examples see unit tests.
  */
+function createSelector() {
+  return {
+    elementValue: '',
+    idValue: '',
+    classValues: [],
+    attrValues: [],
+    pseudoClassValues: [],
+    pseudoElementValue: '',
+    order: 0,
+
+    check(order) {
+      if (this.order > order) {
+        throw new Error(
+          'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+        );
+      }
+      this.order = order;
+    },
+
+    ensureUnique(part) {
+      if (this[part]) {
+        throw new Error(
+          'Element, id and pseudo-element should not occur more than one time inside the selector'
+        );
+      }
+    },
+
+    element(value) {
+      this.check(1);
+      this.ensureUnique('elementValue');
+      this.elementValue = value;
+      return this;
+    },
+
+    id(value) {
+      this.check(2);
+      this.ensureUnique('idValue');
+      this.idValue = `#${value}`;
+      return this;
+    },
+
+    class(value) {
+      this.check(3);
+      this.classValues.push(`.${value}`);
+      return this;
+    },
+
+    attr(value) {
+      this.check(4);
+      this.attrValues.push(`[${value}]`);
+      return this;
+    },
+
+    pseudoClass(value) {
+      this.check(5);
+      this.pseudoClassValues.push(`:${value}`);
+      return this;
+    },
+
+    pseudoElement(value) {
+      this.check(6);
+      this.ensureUnique('pseudoElementValue');
+      this.pseudoElementValue = `::${value}`;
+      return this;
+    },
+
+    stringify() {
+      return (
+        this.elementValue +
+        this.idValue +
+        this.classValues.join('') +
+        this.attrValues.join('') +
+        this.pseudoClassValues.join('') +
+        this.pseudoElementValue
+      );
+    },
+  };
+}
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return createSelector().element(value);
   },
-
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return createSelector().id(value);
   },
-
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return createSelector().class(value);
   },
-
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return createSelector().attr(value);
   },
-
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return createSelector().pseudoClass(value);
   },
-
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return createSelector().pseudoElement(value);
   },
-
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(sel1, combinator, sel2) {
+    return {
+      stringify() {
+        return `${sel1.stringify()} ${combinator} ${sel2.stringify()}`;
+      },
+    };
   },
 };
 
